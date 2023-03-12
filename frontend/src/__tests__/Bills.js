@@ -13,20 +13,23 @@ import { localStorageMock } from "../__mocks__/localStorage.js";
 import router from "../app/Router.js";
 
 describe("Given I am connected as an employee", () => {
+	beforeEach(() => {
+		Object.defineProperty(window, "localStorage", { value: localStorageMock });
+		window.localStorage.setItem(
+			"user",
+			JSON.stringify({
+				type: "Employee",
+			}),
+		);
+		const root = document.createElement("div");
+		root.setAttribute("id", "root");
+		document.body.append(root);
+		router();
+		window.onNavigate(ROUTES_PATH.Bills);
+	});
+
 	describe("When I am on Bills Page", () => {
 		test("Then bill icon in vertical layout should be highlighted", async () => {
-			Object.defineProperty(window, "localStorage", { value: localStorageMock });
-			window.localStorage.setItem(
-				"user",
-				JSON.stringify({
-					type: "Employee",
-				}),
-			);
-			const root = document.createElement("div");
-			root.setAttribute("id", "root");
-			document.body.append(root);
-			router();
-			window.onNavigate(ROUTES_PATH.Bills);
 			await waitFor(() => screen.getByTestId("icon-window"));
 			const windowIcon = screen.getByTestId("icon-window");
 			//to-do write expect expression
@@ -41,19 +44,40 @@ describe("Given I am connected as an employee", () => {
 
 		describe("When I click on eye icon", () => {
 			test("Then modal should be open", () => {
-				document.body.innerHTML = BillsUI({ data: bills });
 				const billsContainer = new Bills({
 					document,
 					onNavigate,
 					firestore: null,
 					localStorage: window.localStorage,
 				});
+
 				const iconEye = screen.getAllByTestId("icon-eye")[0];
 				const handleClickIconEye = jest.fn(billsContainer.handleClickIconEye(iconEye));
 
 				iconEye.addEventListener("click", handleClickIconEye);
 				userEvent.click(iconEye);
+
 				expect(handleClickIconEye).toHaveBeenCalled();
+			});
+		});
+
+		describe("When I click on the new bill button 'Nouvelle note de frais'", () => {
+			test("Then I should be redirected to 'new bill' page", () => {
+				const billsContainer = new Bills({
+					document,
+					onNavigate,
+					firestore: null,
+					localStorage: window.localStorage,
+				});
+
+				const buttonNewBill = screen.getByTestId("btn-new-bill");
+				const handleClickNewBill = jest.fn(billsContainer.handleClickNewBill());
+
+				buttonNewBill.addEventListener("click", handleClickNewBill);
+				userEvent.click(buttonNewBill);
+
+				expect(handleClickNewBill).toHaveBeenCalled();
+				expect(screen.getByText("Envoyer une note de frais")).toBeTruthy();
 			});
 		});
 	});
