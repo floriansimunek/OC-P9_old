@@ -3,6 +3,8 @@
  */
 
 import { screen, waitFor } from "@testing-library/dom";
+import userEvent from "@testing-library/user-event";
+import Bills from "../containers/Bills.js";
 import BillsUI from "../views/BillsUI.js";
 import { bills } from "../fixtures/bills.js";
 import { ROUTES_PATH } from "../constants/routes.js";
@@ -35,6 +37,24 @@ describe("Given I am connected as an employee", () => {
 			const antiChrono = (a, b) => b - a;
 			const datesSorted = [...dates].sort(antiChrono);
 			expect(dates).toEqual(datesSorted);
+		});
+
+		describe("When I click on eye icon", () => {
+			test("Then modal should be open", () => {
+				document.body.innerHTML = BillsUI({ data: bills });
+				const billsContainer = new Bills({
+					document,
+					onNavigate,
+					firestore: null,
+					localStorage: window.localStorage,
+				});
+				const iconEye = screen.getAllByTestId("icon-eye")[0];
+				const handleClickIconEye = jest.fn(billsContainer.handleClickIconEye(iconEye));
+
+				iconEye.addEventListener("click", handleClickIconEye);
+				userEvent.click(iconEye);
+				expect(handleClickIconEye).toHaveBeenCalled();
+			});
 		});
 	});
 });
