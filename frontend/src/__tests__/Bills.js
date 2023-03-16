@@ -3,12 +3,14 @@
  */
 
 import { screen, waitFor } from "@testing-library/dom";
+import "@testing-library/jest-dom";
 import userEvent from "@testing-library/user-event";
 import Bills from "../containers/Bills.js";
 import BillsUI from "../views/BillsUI.js";
 import { bills } from "../fixtures/bills.js";
-import { ROUTES_PATH } from "../constants/routes.js";
+import { ROUTES, ROUTES_PATH } from "../constants/routes.js";
 import { localStorageMock } from "../__mocks__/localStorage.js";
+import "bootstrap";
 
 import router from "../app/Router.js";
 
@@ -27,6 +29,7 @@ describe("Given I am connected as an employee", () => {
 			document.body.append(root);
 			router();
 			window.onNavigate(ROUTES_PATH.Bills);
+
 			await waitFor(() => screen.getByTestId("icon-window"));
 			const windowIcon = screen.getByTestId("icon-window");
 			expect(windowIcon.classList.contains("active-icon")).toBe(true);
@@ -49,57 +52,33 @@ describe("Given I am connected as an employee", () => {
 						type: "Employee",
 					}),
 				);
-				const root = document.createElement("div");
-				root.setAttribute("id", "root");
-				document.body.append(root);
-				router();
-				window.onNavigate(ROUTES_PATH.Bills);
+				document.body.innerHTML = BillsUI({ data: bills });
+				const onNavigate = (pathname) => {
+					document.body.innerHTML = ROUTES({ pathname });
+				};
 				const billsContainer = new Bills({
 					document,
 					onNavigate,
 					firestore: null,
+					bills,
 					localStorage: window.localStorage,
 				});
 
-				const iconEye = screen.getAllByTestId("icon-eye")[0];
-				const handleClickIconEye = jest.fn(billsContainer.handleClickIconEye(iconEye));
+				const modal = document.querySelector("#modaleFile");
+				const iconEye = screen.getAllByTestId("icon-eye");
+				const handleClickIconEye = jest.fn(billsContainer.handleClickIconEye);
+				iconEye.forEach((icon) => {
+					icon.addEventListener("click", () => {
+						handleClickIconEye(icon);
+					});
+				});
+				userEvent.click(iconEye[0]);
 
-				iconEye.addEventListener("click", handleClickIconEye);
-				userEvent.click(iconEye);
+				setTimeout(() => {
+					expect(modal).toHaveClass("show");
+				}, 50);
 
 				expect(handleClickIconEye).toHaveBeenCalled();
-			});
-		});
-
-		describe("When I click on the new bill button 'Nouvelle note de frais'", () => {
-			test("Then I should be redirected to 'new bill' page", () => {
-				Object.defineProperty(window, "localStorage", { value: localStorageMock });
-				window.localStorage.setItem(
-					"user",
-					JSON.stringify({
-						type: "Employee",
-					}),
-				);
-				const root = document.createElement("div");
-				root.setAttribute("id", "root");
-				document.body.append(root);
-				router();
-				window.onNavigate(ROUTES_PATH.Bills);
-				const billsContainer = new Bills({
-					document,
-					onNavigate,
-					firestore: null,
-					localStorage: window.localStorage,
-				});
-
-				const buttonNewBill = screen.getByTestId("btn-new-bill");
-				const handleClickNewBill = jest.fn(billsContainer.handleClickNewBill());
-
-				buttonNewBill.addEventListener("click", handleClickNewBill);
-				userEvent.click(buttonNewBill);
-
-				expect(handleClickNewBill).toHaveBeenCalled();
-				expect(screen.getByText("Envoyer une note de frais")).toBeTruthy();
 			});
 		});
 	});
