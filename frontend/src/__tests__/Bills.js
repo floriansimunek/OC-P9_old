@@ -10,7 +10,6 @@ import BillsUI from "../views/BillsUI.js";
 import { bills } from "../fixtures/bills.js";
 import { ROUTES, ROUTES_PATH } from "../constants/routes.js";
 import { localStorageMock } from "../__mocks__/localStorage.js";
-import "bootstrap";
 
 import router from "../app/Router.js";
 
@@ -64,7 +63,7 @@ describe("Given I am connected as an employee", () => {
 					localStorage: window.localStorage,
 				});
 
-				const modal = document.querySelector("#modaleFile");
+				const modal = screen.getByTestId("modaleFile");
 				const iconEye = screen.getAllByTestId("icon-eye");
 				const handleClickIconEye = jest.fn(billsContainer.handleClickIconEye);
 				iconEye.forEach((icon) => {
@@ -74,11 +73,10 @@ describe("Given I am connected as an employee", () => {
 				});
 				userEvent.click(iconEye[0]);
 
+				expect(handleClickIconEye).toHaveBeenCalled();
 				setTimeout(() => {
 					expect(modal).toHaveClass("show");
 				}, 50);
-
-				expect(handleClickIconEye).toHaveBeenCalled();
 			});
 		});
 
