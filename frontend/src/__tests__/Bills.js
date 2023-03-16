@@ -81,5 +81,36 @@ describe("Given I am connected as an employee", () => {
 				expect(handleClickIconEye).toHaveBeenCalled();
 			});
 		});
+
+		describe("When I click on the new bill button 'Nouvelle note de frais'", () => {
+			test("Then I should be redirected to 'new bill' page", () => {
+				Object.defineProperty(window, "localStorage", { value: localStorageMock });
+				window.localStorage.setItem(
+					"user",
+					JSON.stringify({
+						type: "Employee",
+					}),
+				);
+				document.body.innerHTML = BillsUI({ data: bills });
+				const onNavigate = (pathname) => {
+					document.body.innerHTML = ROUTES({ pathname });
+				};
+				const billsContainer = new Bills({
+					document,
+					onNavigate,
+					firestore: null,
+					bills,
+					localStorage: window.localStorage,
+				});
+
+				const buttonNewBill = screen.getByTestId("btn-new-bill");
+				const handleClickNewBill = jest.fn(billsContainer.handleClickNewBill());
+				buttonNewBill.addEventListener("click", handleClickNewBill);
+				userEvent.click(buttonNewBill);
+
+				expect(handleClickNewBill).toHaveBeenCalled();
+				expect(screen.getByText("Envoyer une note de frais")).toBeTruthy();
+			});
+		});
 	});
 });
